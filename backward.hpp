@@ -92,6 +92,7 @@
 #include <streambuf>
 #include <string>
 #include <vector>
+#include <atomic>
 
 #if defined(BACKWARD_SYSTEM_LINUX)
 
@@ -4245,6 +4246,9 @@ private:
 
 #if defined(BACKWARD_SYSTEM_LINUX) || defined(BACKWARD_SYSTEM_DARWIN)
 
+static std::string file_path_ = "";
+static std::atomic<bool> handling_signal = false;
+
 class SignalHandling
 {
 public:
@@ -4355,7 +4359,34 @@ public:
 
     Printer printer;
     printer.address = true;
+    printer.object = true;
+    printer.color_mode = ColorMode::always;
     printer.print(st, stderr);
+
+    // --------------- Peppermint ----------------
+    if (file_path_ != "" && !handling_signal && file_path_.find(".txt") != std::string::npos) {
+      handling_signal = true;
+
+      FILE * file_ptr_;
+
+      file_ptr_ = fopen(file_path_.c_str(), "a");
+
+      if (file_ptr_ != NULL) {
+        std::cout << "Saving the file at: " << file_path_ << std::endl;
+        Printer printer_file;
+        printer_file.address = true;
+        printer_file.object = true;
+        printer_file.color_mode = ColorMode::always;
+        printer_file.print(st, file_ptr_);
+        if (file_ptr_) {
+          fclose(file_ptr_);
+        }
+      } else {
+        std::cerr << "Could not open the file at: " << file_path_ << std::endl;
+      }
+
+      handling_signal = false;
+    }
 
 #if (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 700) || \
   (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200809L)
