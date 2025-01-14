@@ -21,16 +21,18 @@
  * SOFTWARE.
  */
 
-#include "backward.hpp"
-#include "test/test.hpp"
 #include <cstdio>
 #include <iostream>
 
+#include "backward.hpp"
+#include "test/test.hpp"
+
 using namespace backward;
 
-void collect_trace(StackTrace &st) { st.load_here(); }
+void collect_trace(StackTrace & st) { st.load_here(); }
 
-TEST(minitrace) {
+TEST(minitrace)
+{
   Printer printer;
 
   StackTrace st;
@@ -39,15 +41,16 @@ TEST(minitrace) {
   printer.print(st, std::cout);
 }
 
-void d(StackTrace &st) { st.load_here(); }
+void d(StackTrace & st) { st.load_here(); }
 
-void c(StackTrace &st) { return d(st); }
+void c(StackTrace & st) { return d(st); }
 
-void b(StackTrace &st) { return c(st); }
+void b(StackTrace & st) { return c(st); }
 
-NOINLINE void a(StackTrace &st) { return b(st); }
+NOINLINE void a(StackTrace & st) { return b(st); }
 
-TEST(smalltrace) {
+TEST(smalltrace)
+{
   Printer printer;
 
   StackTrace st;

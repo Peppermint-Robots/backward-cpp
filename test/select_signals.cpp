@@ -21,20 +21,22 @@
  * SOFTWARE.
  */
 
-#include "backward.hpp"
-
-#include "test/test.hpp"
 #include <signal.h>
 #include <stdio.h>
 
+#include "backward.hpp"
+#include "test/test.hpp"
+
 using namespace backward;
 
-void badass_function() {
-  char *ptr = (char *)42;
+void badass_function()
+{
+  char * ptr = (char *)42;
   *ptr = 42;
 }
 
-TEST_SEGFAULT(pprint_sigsev) {
+TEST_SEGFAULT(pprint_sigsev)
+{
   std::vector<int> signals;
   signals.push_back(SIGSEGV);
   SignalHandling sh(signals);
@@ -42,7 +44,8 @@ TEST_SEGFAULT(pprint_sigsev) {
   badass_function();
 }
 
-TEST_SEGFAULT(wont_pprint) {
+TEST_SEGFAULT(wont_pprint)
+{
   std::vector<int> signals;
   signals.push_back(SIGABRT);
   SignalHandling sh(signals);

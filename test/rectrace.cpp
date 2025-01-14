@@ -21,21 +21,24 @@
  * SOFTWARE.
  */
 
+#include <stdio.h>
+
 #include "backward.hpp"
 #include "test/test.hpp"
-#include <stdio.h>
 
 using namespace backward;
 
 typedef StackTrace stacktrace_t;
 
-void end_of_our_journey(stacktrace_t &st) {
+void end_of_our_journey(stacktrace_t & st)
+{
   if (!st.size()) {
     st.load_here();
   }
 }
 
-int rec(stacktrace_t &st, int level) {
+int rec(stacktrace_t & st, int level)
+{
   if (level <= 1) {
     end_of_our_journey(st);
     return 0;
@@ -43,25 +46,26 @@ int rec(stacktrace_t &st, int level) {
   return rec(st, level - 1);
 }
 
-namespace toto {
+namespace toto
+{
 
-namespace titi {
+namespace titi
+{
 
-struct foo {
-
+struct foo
+{
   union bar {
-    NOINLINE static int trampoline(stacktrace_t &st, int level) {
-      return rec(st, level);
-    }
+    NOINLINE static int trampoline(stacktrace_t & st, int level) { return rec(st, level); }
   };
 };
 
-} // namespace titi
+}  // namespace titi
 
-} // namespace toto
+}  // namespace toto
 
-TEST(recursion) {
-  { // lexical scope.
+TEST(recursion)
+{
+  {  // lexical scope.
     stacktrace_t st;
     const int input = 3;
     int r = toto::titi::foo::bar::trampoline(st, input);
@@ -75,7 +79,8 @@ TEST(recursion) {
   }
 }
 
-int fib(StackTrace &st, int level) {
+int fib(StackTrace & st, int level)
+{
   if (level == 2) {
     return 1;
   }
@@ -86,7 +91,8 @@ int fib(StackTrace &st, int level) {
   return fib(st, level - 1) + fib(st, level - 2);
 }
 
-TEST(fibrecursive) {
+TEST(fibrecursive)
+{
   StackTrace st;
   const int input = 6;
   int r = fib(st, input);

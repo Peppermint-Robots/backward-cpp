@@ -5,12 +5,14 @@
 
 using namespace backward;
 
-class TracedException : public std::runtime_error {
+class TracedException : public std::runtime_error
+{
 public:
   TracedException() : std::runtime_error(_get_trace()) {}
 
 private:
-  std::string _get_trace() {
+  std::string _get_trace()
+  {
     std::ostringstream ss;
 
     StackTrace stackTrace;
@@ -28,7 +30,8 @@ private:
   }
 };
 
-void f(int i) {
+void f(int i)
+{
   if (i >= 42) {
     throw TracedException();
   } else {
@@ -37,10 +40,11 @@ void f(int i) {
   }
 }
 
-int main() {
+int main()
+{
   try {
     f(0);
-  } catch (const TracedException &ex) {
+  } catch (const TracedException & ex) {
     std::cout << ex.what();
   }
 }

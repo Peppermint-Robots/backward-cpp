@@ -32,15 +32,20 @@
 #include <string>
 #include <vector>
 
-namespace test {
+namespace test
+{
 
-struct AssertFailedError : std::exception {
+struct AssertFailedError : std::exception
+{
   ~AssertFailedError() throw() {}
 
-  AssertFailedError(const char *filename, int _line, const char *_errmsg)
-      : basename(_basename(filename)), line(_line), errmsg(_errmsg) {}
+  AssertFailedError(const char * filename, int _line, const char * _errmsg)
+  : basename(_basename(filename)), line(_line), errmsg(_errmsg)
+  {
+  }
 
-  const char *what() const throw() {
+  const char * what() const throw()
+  {
     if (!_what.size()) {
       std::ostringstream ss;
       ss << "assertion failed (" << basename << ":" << line;
@@ -50,14 +55,15 @@ struct AssertFailedError : std::exception {
     return _what.c_str();
   }
 
-  const char *basename;
+  const char * basename;
   int line;
-  const char *errmsg;
+  const char * errmsg;
 
   mutable std::string _what;
 
-  static const char *_basename(const char *filename) {
-    const char *basename = filename + strlen(filename);
+  static const char * _basename(const char * filename)
+  {
+    const char * basename = filename + strlen(filename);
     while (basename != filename && *basename != '/') {
       basename -= 1;
     }
@@ -79,22 +85,24 @@ enum TestStatus {
   STATUS_MASK = 0x1F
 };
 
-struct TestBase {
-  const char *name;
+struct TestBase
+{
+  const char * name;
   TestStatus expected_status;
 
   virtual ~TestBase() {}
   TestBase(const char *, TestStatus);
   virtual void do_test() = 0;
 
-  TestStatus run() {
+  TestStatus run()
+  {
     try {
       do_test();
       return SUCCESS;
-    } catch (const AssertFailedError &e) {
+    } catch (const AssertFailedError & e) {
       printf("!! %s\n", e.what());
       return ASSERT_FAIL;
-    } catch (const std::exception &e) {
+    } catch (const std::exception & e) {
       printf("!! exception: %s\n", e.what());
       return EXCEPTION_UNCAUGHT;
     } catch (...) {
@@ -105,43 +113,43 @@ struct TestBase {
 };
 
 typedef std::vector<TestBase *> test_registry_t;
-inline test_registry_t &test_registry() {
+inline test_registry_t & test_registry()
+{
   static test_registry_t reg;
   return reg;
 }
 
-inline TestBase::TestBase(const char *n, TestStatus s)
-    : name(n), expected_status(s) {
+inline TestBase::TestBase(const char * n, TestStatus s) : name(n), expected_status(s)
+{
   test_registry().push_back(this);
 }
 
-} // namespace test
+}  // namespace test
 
-#define _TEST_STATUS(name, status)                                             \
-  struct TEST_##name : ::test::TestBase {                                      \
-    TEST_##name() : TestBase(#name, status) {}                                 \
-    void do_test();                                                            \
-  } TEST_##name;                                                               \
+#define _TEST_STATUS(name, status)             \
+  struct TEST_##name : ::test::TestBase        \
+  {                                            \
+    TEST_##name() : TestBase(#name, status) {} \
+    void do_test();                            \
+  } TEST_##name;                               \
   void TEST_##name::do_test()
 
 #define TEST(name) _TEST_STATUS(name, ::test::SUCCESS)
 #define TEST_FAIL(name) _TEST_STATUS(name, ::test::FAILED)
 #define TEST_FAIL_ASSERT(name) _TEST_STATUS(name, ::test::ASSERT_FAIL)
-#define TEST_UNCAUGHT_EXCEPTION(name)                                          \
-  _TEST_STATUS(name, ::test::EXCEPTION_UNCAUGHT)
+#define TEST_UNCAUGHT_EXCEPTION(name) _TEST_STATUS(name, ::test::EXCEPTION_UNCAUGHT)
 #define TEST_UNCAUGHT_SIGNAL(name) _TEST_STATUS(name, ::test::SIGNAL_UNCAUGHT)
 #define TEST_SEGFAULT(name) _TEST_STATUS(name, ::test::SIGNAL_SEGFAULT)
 #define TEST_ABORT(name) _TEST_STATUS(name, ::test::SIGNAL_ABORT)
 #define TEST_DIVZERO(name) _TEST_STATUS(name, ::test::SIGNAL_DIVZERO)
 
-#define ASSERT(expr)                                                           \
-  (expr) ? static_cast<void>(0)                                                \
-         : throw ::test::AssertFailedError(__FILE__, __LINE__, #expr)
+#define ASSERT(expr) \
+  (expr) ? static_cast<void>(0) : throw ::test::AssertFailedError(__FILE__, __LINE__, #expr)
 
-#define _ASSERT_BINOP(a, b, cmp)                                               \
-  (!(a cmp b)) ? static_cast<void>(0)                                          \
-               : throw ::test::AssertFailedError(                              \
-                     __FILE__, __LINE__, "because " #a " " #cmp " " #b)
+#define _ASSERT_BINOP(a, b, cmp) \
+  (!(a cmp b))                   \
+    ? static_cast<void>(0)       \
+    : throw ::test::AssertFailedError(__FILE__, __LINE__, "because " #a " " #cmp " " #b)
 
 #define ASSERT_EQ(a, b) _ASSERT_BINOP(a, b, !=)
 #define ASSERT_NE(a, b) _ASSERT_BINOP(a, b, ==)
@@ -150,34 +158,31 @@ inline TestBase::TestBase(const char *n, TestStatus s)
 #define ASSERT_GT(a, b) _ASSERT_BINOP(a, b, <=)
 #define ASSERT_GE(a, b) _ASSERT_BINOP(a, b, <)
 
-#define ASSERT_THROW(expr, e_type)                                             \
-  do {                                                                         \
-    try {                                                                      \
-      expr                                                                     \
-    } catch (const e_type &) {                                                 \
-      break;                                                                   \
-    }                                                                          \
-    throw ::test::AssertFailedError(__FILE__, __LINE__,                        \
-                                    "expected exception " #e_type);            \
+#define ASSERT_THROW(expr, e_type)                                                      \
+  do {                                                                                  \
+    try {                                                                               \
+      expr                                                                              \
+    } catch (const e_type &) {                                                          \
+      break;                                                                            \
+    }                                                                                   \
+    throw ::test::AssertFailedError(__FILE__, __LINE__, "expected exception " #e_type); \
   } while (0)
 
-#define ASSERT_ANY_THROW(expr)                                                 \
-  do {                                                                         \
-    try {                                                                      \
-      expr                                                                     \
-    } catch (...) {                                                            \
-      break;                                                                   \
-    }                                                                          \
-    throw ::test::AssertFailedError(__FILE__, __LINE__,                        \
-                                    "expected any exception");                 \
+#define ASSERT_ANY_THROW(expr)                                                     \
+  do {                                                                             \
+    try {                                                                          \
+      expr                                                                         \
+    } catch (...) {                                                                \
+      break;                                                                       \
+    }                                                                              \
+    throw ::test::AssertFailedError(__FILE__, __LINE__, "expected any exception"); \
   } while (0)
 
-#define ASSERT_NO_THROW(expr)                                                  \
-  try {                                                                        \
-    expr                                                                       \
-  } catch (...) {                                                              \
-    throw ::test::AssertFailedError(__FILE__, __LINE__,                        \
-                                    "no exception expected");                  \
+#define ASSERT_NO_THROW(expr)                                                     \
+  try {                                                                           \
+    expr                                                                          \
+  } catch (...) {                                                                 \
+    throw ::test::AssertFailedError(__FILE__, __LINE__, "no exception expected"); \
   }
 
 #endif /* H_GUARD */

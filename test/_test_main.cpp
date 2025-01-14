@@ -21,9 +21,10 @@
  * SOFTWARE.
  */
 
-#include "test.hpp"
 #include <cstdio>
 #include <cstdlib>
+
+#include "test.hpp"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -40,7 +41,8 @@
 
 #ifdef _WIN32
 char argv0[MAX_PATH];
-inline const char *getprogname() {
+inline const char * getprogname()
+{
   return GetModuleFileName(NULL, argv0, sizeof(argv0)) ? argv0 : NULL;
 }
 #elif !defined(__APPLE__)
@@ -50,7 +52,8 @@ inline const char *getprogname() {
 #define getprogname() program_invocation_name
 #endif
 
-void error(int status, int errnum, const char *format, ...) {
+void error(int status, int errnum, const char * format, ...)
+{
   fflush(stdout);
   fprintf(stderr, "%s: ", getprogname());
 
@@ -72,7 +75,8 @@ void error(int status, int errnum, const char *format, ...) {
 
 using namespace test;
 
-bool run_test(TestBase &test, bool use_child_process = true) {
+bool run_test(TestBase & test, bool use_child_process = true)
+{
   if (!use_child_process) {
     exit(static_cast<int>(test.run()));
   }
@@ -85,7 +89,7 @@ bool run_test(TestBase &test, bool use_child_process = true) {
 
 #ifdef _WIN32
   char filename[256];
-  GetModuleFileName(NULL, filename, 256); // TODO: check for error
+  GetModuleFileName(NULL, filename, 256);  // TODO: check for error
   std::string cmd_line = filename;
   cmd_line += " --nofork ";
   cmd_line += test.name;
@@ -96,8 +100,9 @@ bool run_test(TestBase &test, bool use_child_process = true) {
   si.cb = sizeof(si);
   ZeroMemory(&pi, sizeof(pi));
 
-  if (!CreateProcessA(nullptr, const_cast<char *>(cmd_line.c_str()), nullptr,
-                      nullptr, FALSE, 0, nullptr, nullptr, &si, &pi)) {
+  if (!CreateProcessA(
+        nullptr, const_cast<char *>(cmd_line.c_str()), nullptr, nullptr, FALSE, 0, nullptr, nullptr,
+        &si, &pi)) {
     printf("unable to create process\n");
     exit(-1);
   }
@@ -107,21 +112,21 @@ bool run_test(TestBase &test, bool use_child_process = true) {
   DWORD exit_code;
   GetExitCodeProcess(pi.hProcess, &exit_code);
   switch (exit_code) {
-  case 3:
-    status = test::SIGNAL_ABORT;
-    break;
-  case 5:
-    status = test::EXCEPTION_UNCAUGHT;
-    break;
-  case EXCEPTION_ACCESS_VIOLATION:
-    status = test::SIGNAL_SEGFAULT;
-    break;
-  case EXCEPTION_STACK_OVERFLOW:
-    status = test::SIGNAL_SEGFAULT;
-    break;
-  case EXCEPTION_INT_DIVIDE_BY_ZERO:
-    status = test::SIGNAL_DIVZERO;
-    break;
+    case 3:
+      status = test::SIGNAL_ABORT;
+      break;
+    case 5:
+      status = test::EXCEPTION_UNCAUGHT;
+      break;
+    case EXCEPTION_ACCESS_VIOLATION:
+      status = test::SIGNAL_SEGFAULT;
+      break;
+    case EXCEPTION_STACK_OVERFLOW:
+      status = test::SIGNAL_SEGFAULT;
+      break;
+    case EXCEPTION_INT_DIVIDE_BY_ZERO:
+      status = test::SIGNAL_DIVZERO;
+      break;
   }
   printf("Exit code: %lu\n", exit_code);
 
@@ -157,18 +162,18 @@ bool run_test(TestBase &test, bool use_child_process = true) {
     const int signum = WTERMSIG(child_status);
     printf("!! signal (%d) %s\n", signum, strsignal(signum));
     switch (signum) {
-    case SIGABRT:
-      status = test::SIGNAL_ABORT;
-      break;
-    case SIGSEGV:
-    case SIGBUS:
-      status = test::SIGNAL_SEGFAULT;
-      break;
-    case SIGFPE:
-      status = test::SIGNAL_DIVZERO;
-      break;
-    default:
-      status = test::SIGNAL_UNCAUGHT;
+      case SIGABRT:
+        status = test::SIGNAL_ABORT;
+        break;
+      case SIGSEGV:
+      case SIGBUS:
+        status = test::SIGNAL_SEGFAULT;
+        break;
+      case SIGFPE:
+        status = test::SIGNAL_DIVZERO;
+        break;
+      default:
+        status = test::SIGNAL_UNCAUGHT;
     }
   }
 
@@ -185,8 +190,8 @@ bool run_test(TestBase &test, bool use_child_process = true) {
   return status == test.expected_status;
 }
 
-int main(int argc, const char *const argv[]) {
-
+int main(int argc, const char * const argv[])
+{
 #ifdef _WIN32
   _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
 #endif
@@ -194,9 +199,9 @@ int main(int argc, const char *const argv[]) {
   if (argc == 3 && strcmp("--nofork", argv[1]) == 0) {
     // Windows has no fork, so we simulate it
     // we only execute one test, without forking
-    for (test_registry_t::iterator it = test_registry().begin();
-         it != test_registry().end(); ++it) {
-      TestBase &test = **it;
+    for (test_registry_t::iterator it = test_registry().begin(); it != test_registry().end();
+         ++it) {
+      TestBase & test = **it;
       if (strcasecmp(argv[2], test.name) == 0) {
         run_test(test, false);
 
@@ -208,9 +213,8 @@ int main(int argc, const char *const argv[]) {
 
   size_t success_cnt = 0;
   size_t total_cnt = 0;
-  for (test_registry_t::iterator it = test_registry().begin();
-       it != test_registry().end(); ++it) {
-    TestBase &test = **it;
+  for (test_registry_t::iterator it = test_registry().begin(); it != test_registry().end(); ++it) {
+    TestBase & test = **it;
 
     bool consider_test = (argc <= 1);
     for (int i = 1; i < argc; ++i) {
