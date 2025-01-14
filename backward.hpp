@@ -4246,8 +4246,8 @@ private:
 
 #if defined(BACKWARD_SYSTEM_LINUX) || defined(BACKWARD_SYSTEM_DARWIN)
 
-static std::string file_path_ = "";
-static std::atomic<bool> handling_signal = false;
+extern std::string file_path;
+extern std::atomic<bool> handling_signal;
 
 class SignalHandling
 {
@@ -4277,6 +4277,8 @@ public:
 
   SignalHandling(const std::vector<int> & posix_signals = make_default_signals()) : _loaded(false)
   {
+    handling_signal = false;
+
     bool success = true;
 
     const size_t stack_size = 1024 * 1024 * 8;
@@ -4364,15 +4366,15 @@ public:
     printer.print(st, stderr);
 
     // --------------- Peppermint ----------------
-    if (file_path_ != "" && !handling_signal && file_path_.find(".txt") != std::string::npos) {
+    if (file_path != "" && !handling_signal && file_path.find(".txt") != std::string::npos) {
       handling_signal = true;
 
       FILE * file_ptr_;
 
-      file_ptr_ = fopen(file_path_.c_str(), "a");
+      file_ptr_ = fopen(file_path.c_str(), "a");
 
       if (file_ptr_ != NULL) {
-        std::cout << "Saving the file at: " << file_path_ << std::endl;
+        std::cout << "Saving the file at: " << file_path << std::endl;
         Printer printer_file;
         printer_file.address = true;
         printer_file.object = true;
@@ -4382,7 +4384,7 @@ public:
           fclose(file_ptr_);
         }
       } else {
-        std::cerr << "Could not open the file at: " << file_path_ << std::endl;
+        std::cerr << "Could not open the file at: " << file_path << std::endl;
       }
 
       handling_signal = false;

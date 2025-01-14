@@ -38,6 +38,9 @@
 namespace backward
 {
 
+std::string file_path = "";
+std::atomic<bool> handling_signal{false};
+
 backward::SignalHandling sh;
 
 }  // namespace backward
