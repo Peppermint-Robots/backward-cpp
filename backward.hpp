@@ -76,7 +76,10 @@
 
 #define NOINLINE __attribute__((noinline))
 
+#include <time.h>
+
 #include <algorithm>
+#include <atomic>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -92,7 +95,6 @@
 #include <streambuf>
 #include <string>
 #include <vector>
-#include <atomic>
 
 #if defined(BACKWARD_SYSTEM_LINUX)
 
@@ -4381,7 +4383,31 @@ public:
         printer_file.color_mode = ColorMode::always;
         printer_file.print(st, file_ptr_);
         if (file_ptr_) {
+          // Get the current time
+          time_t now = time(NULL);
+          if (now == -1) {
+            perror("Error getting current time");
+            fclose(file_ptr_);
+            return;
+          }
+
+          // Format the timestamp
+          struct tm * local_time = localtime(&now);
+          if (local_time == NULL) {
+            perror("Error converting time to local time");
+            fclose(file_ptr_);
+            return;
+          }
+
+          // Write the formatted timestamp to the file
+          fprintf(
+            file_ptr_, "\nCrash Timestamp: %02d-%02d-%04d %02d:%02d:%02d\n", local_time->tm_mday,
+            local_time->tm_mon + 1,      // Months are 0-11 in struct tm
+            local_time->tm_year + 1900,  // Years since 1900 in struct tm
+            local_time->tm_hour, local_time->tm_min, local_time->tm_sec);
+
           fclose(file_ptr_);
+          std::cout << "Closing the crash log file!" << std::endl;
         }
       } else {
         std::cerr << "Could not open the file at: " << file_path << std::endl;
